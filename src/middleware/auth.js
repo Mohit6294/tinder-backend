@@ -1,3 +1,6 @@
+ /**
+  * middleware for admin authentication
+  */
  const adminAuth = (req, res, next) => {
   //Logic of checking if the request is authorized
   const token = "xyz";
@@ -12,6 +15,9 @@
   }
 };
 
+/**
+ * Middleware for user authentication
+ */
 const userAuth = (req, res, next) => {
   //Logic of checking if the request is authorized
   const token = "xyz";

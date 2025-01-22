@@ -4,7 +4,9 @@ const connectDB= require("./config/database");
 const User = require("./models/User");
 
 app.use(express.json());
-
+/**
+ * Api to register the user
+ */
 app.post('/signup', async (req, res) =>{
   //console.log(req.body)
   //creating new instance of model(creating a document) User
@@ -33,7 +35,7 @@ app.get("/user",async (req, res) => {
     }
     
   }catch(err){
-    res.status(501).send("Something Went Wrong");
+    res.status(500).send("Something Went Wrong");
   }
 })
 
@@ -45,12 +47,44 @@ app.get("/feed", async (req, res) => {
     const users =await User.find();
     res.send(users);
   }catch(err){
-    res.status(501).send("Something Went Wrong");
+    res.status(500).send("Something Went Wrong");
+  }
+});
+
+/**
+ * delete user api
+ */
+app.delete("/user", async (req, res) =>{
+  try{
+      const userId = req.body.userId;
+      await User.findByIdAndDelete(userId);
+      //await User.findByIdAndDelete({_id: userId})
+      res.status(200).send("User deleted Successfully");
+  }catch(err){
+    res.status(500).send("Something went wrong");
+  }
+});
+
+
+/**
+ * update user api
+ */
+app.patch("/user", async (req, res) => {
+  try{
+    const userId = req.body.userId;
+    const data = req.body;
+    const user = await User.findByIdAndUpdate(userId,data,{
+      returnDocument: "after"
+    });
+    res.send(`user with id : ${userId} updated Succesffully` );
+  }catch(err){
+    res.status(500).send("Something went wrong");
   }
 })
 
-
-
+/**
+ * connect the database and create a server with listening port
+ */
 connectDB().then(()=>{
   console.log("Database connection established...");
   app.listen(5000, () => {

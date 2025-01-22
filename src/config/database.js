@@ -1,4 +1,4 @@
-// getting-started.js
+// Database configuration using mongoose
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
