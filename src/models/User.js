@@ -43,7 +43,12 @@ const userSchema =new mongoose.Schema({
     default: "This is a default description",
   },
   skills:{
-    type: [String]
+    type: [String],
+    validate(value){
+      if(value.length > 10){
+        throw new Error("Skills should be less than 10");
+      }
+    }
   }
   
 },{

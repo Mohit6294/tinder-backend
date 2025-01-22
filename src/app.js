@@ -1,52 +1,68 @@
 const express = require("express");
 const app = express();
-const connectDB= require("./config/database");
+const connectDB = require("./config/database");
 const User = require("./models/User");
 
 app.use(express.json());
 /**
  * Api to register the user
  */
-app.post('/signup', async (req, res) =>{
+app.post("/signup", async (req, res) => {
   //console.log(req.body)
   //creating new instance of model(creating a document) User
-  const user = new User(req.body);
-  try{
-   await user.save();
-  res.send("User Added Successfully");
-  }catch(err){
-    res.status(400).send("Error while saving user: "+err.message);
+
+  try {
+    const userOptions = [
+      "firstName",
+      "lastName",
+      "emailId",
+      "password",
+      "age",
+      "gender",
+      "photoUrl",
+      "description",
+      "skills",
+    ];
+
+    const isSaveAllowed = Object.keys(req.body).every((key) =>
+      userOptions.includes(key)
+    );
+    if (!isSaveAllowed) {
+      throw new Error("Save not allowed , please check the field");
+    }
+    const user = new User(req.body);
+    await user.save();
+    res.send("User Added Successfully");
+  } catch (err) {
+    res.status(400).send("Error while saving user: " + err.message);
   }
-  
 });
 
 /**
  * find user by emailId
  */
-app.get("/user",async (req, res) => {
+app.get("/user", async (req, res) => {
   const emailId = req.body.emailId;
-  try{
-
-    const user = await User.find({emailId: emailId});
-    if(user.length === 0){
+  try {
+    const user = await User.find({ emailId: emailId });
+    if (user.length === 0) {
       res.status(404).send(`User not found with emailId  ${emailId}`);
-    }else{
+    } else {
       res.send(user);
     }
-    
-  }catch(err){
+  } catch (err) {
     res.status(500).send("Something Went Wrong");
   }
-})
+});
 
 /**
  * feed api, to get all the users
  */
 app.get("/feed", async (req, res) => {
-  try{
-    const users =await User.find();
+  try {
+    const users = await User.find();
     res.send(users);
-  }catch(err){
+  } catch (err) {
     res.status(500).send("Something Went Wrong");
   }
 });
@@ -54,46 +70,60 @@ app.get("/feed", async (req, res) => {
 /**
  * delete user api
  */
-app.delete("/user", async (req, res) =>{
-  try{
-      const userId = req.body.userId;
-      await User.findByIdAndDelete(userId);
-      //await User.findByIdAndDelete({_id: userId})
-      res.status(200).send("User deleted Successfully");
-  }catch(err){
+app.delete("/user", async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    await User.findByIdAndDelete(userId);
+    //await User.findByIdAndDelete({_id: userId})
+    res.status(200).send("User deleted Successfully");
+  } catch (err) {
     res.status(500).send("Something went wrong");
   }
 });
 
-
 /**
  * update user api
  */
-app.patch("/user", async (req, res) => {
-  try{
-    const userId = req.body.userId;
+app.patch("/user/:userId", async (req, res) => {
+  try {
+    const updateOptions = [
+      "age",
+      "photoUrl",
+      "description",
+      "skills",
+    ];
+
+    const isUpdateAllowed = Object.keys(req.body).every((key) =>
+      updateOptions.includes(key)
+    );
+    if (!isUpdateAllowed) {
+      throw new Error("Update not allowed , please check the field");
+    }
+    const userId = req.params?.userId;
     const data = req.body;
-    const user = await User.findByIdAndUpdate(userId,data,{
+    const user = await User.findByIdAndUpdate(userId, data, {
       returnDocument: "after",
       runValidators: true,
     });
-    res.send(`user with id : ${userId} updated Succesffully` );
-  }catch(err){
-    res.status(500).send("Something went wrong"+err.message);
+    res.send(`user with id : ${userId} updated Succesffully`);
+  } catch (err) {
+    res.status(500).send("Something went wrong" + err.message);
   }
-})
+});
 
 /**
  * connect the database and create a server with listening port
  */
-connectDB().then(()=>{
-  console.log("Database connection established...");
-  app.listen(5000, () => {
-    console.log("listnening the port on 5000");
+connectDB()
+  .then(() => {
+    console.log("Database connection established...");
+    app.listen(5000, () => {
+      console.log("listnening the port on 5000");
+    });
+  })
+  .catch((err) => {
+    console.error("Database cannot be connected");
   });
-}).catch(err =>{
-  console.error("Database cannot be connected");
-})
 
 /*
 app.get("/getUserData", (req, res) => {
@@ -203,4 +233,3 @@ app.use('/test', (req, res) => {
 });
 
 */
-
