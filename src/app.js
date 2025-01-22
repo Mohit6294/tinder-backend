@@ -10,13 +10,46 @@ app.post('/signup', async (req, res) =>{
   //creating new instance of model(creating a document) User
   const user = new User(req.body);
   try{
-  await user.save();
+   await user.save();
   res.send("User Added Successfully");
   }catch(err){
     res.status(400).send("Error while saving user: ",err.message);
   }
   
+});
+
+/**
+ * find user by emailId
+ */
+app.get("/user",async (req, res) => {
+  const emailId = req.body.emailId;
+  try{
+
+    const user = await User.find({emailId: emailId});
+    if(user.length === 0){
+      res.status(404).send(`User not found with emailId  ${emailId}`);
+    }else{
+      res.send(user);
+    }
+    
+  }catch(err){
+    res.status(501).send("Something Went Wrong");
+  }
 })
+
+/**
+ * feed api, to get all the users
+ */
+app.get("/feed", async (req, res) => {
+  try{
+    const users =await User.find();
+    res.send(users);
+  }catch(err){
+    res.status(501).send("Something Went Wrong");
+  }
+})
+
+
 
 connectDB().then(()=>{
   console.log("Database connection established...");
