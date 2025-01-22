@@ -39,6 +39,28 @@ app.post("/signup", async (req, res) => {
 });
 
 /**
+ * Login Api to allow user to login into the application.
+ */
+
+app.post("/login", async (req, res) =>{
+  const {emailId , password} = req.body;
+  try{
+    const user = await User.findOne({emailId: emailId});
+    console.log(user)
+    if(!user){
+      throw new Error("Invalid Credentials");
+    }
+    const isPasswordMatch =await bcrypt.compare(password, user.password);
+    if(!isPasswordMatch){
+      throw new Error("Invalid Credentials");
+    }
+    res.send("Login Succesffully");
+  }catch(err){
+    res.status(400).send(err.message);
+  }
+})
+
+/**
  * find user by emailId
  */
 app.get("/user", async (req, res) => {
