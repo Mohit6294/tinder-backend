@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const connectDB = require("./config/database");
 const User = require("./models/User");
+const {isSaveAllowed, validateSignupData} = require("./utils/validation");
+const bcrypt = require('bcrypt');
 
 app.use(express.json());
 /**
@@ -11,26 +13,24 @@ app.post("/signup", async (req, res) => {
   //console.log(req.body)
   //creating new instance of model(creating a document) User
 
-  try {
-    const userOptions = [
-      "firstName",
-      "lastName",
-      "emailId",
-      "password",
-      "age",
-      "gender",
-      "photoUrl",
-      "description",
-      "skills",
-    ];
 
-    const isSaveAllowed = Object.keys(req.body).every((key) =>
-      userOptions.includes(key)
-    );
-    if (!isSaveAllowed) {
-      throw new Error("Save not allowed , please check the field");
-    }
-    const user = new User(req.body);
+  try {
+    //validate all the fields of signup request should be present in the body
+    isSaveAllowed(req);
+
+    //validate the signup request data
+    validateSignupData(req);
+    const {firstName, lastName, emailId, password} = req.body;
+
+    //encrypt the password 
+
+    const encyrptedPasword =await bcrypt.hash(password,10);
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: encyrptedPasword
+    });
     await user.save();
     res.send("User Added Successfully");
   } catch (err) {
