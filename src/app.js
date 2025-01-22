@@ -15,7 +15,7 @@ app.post('/signup', async (req, res) =>{
    await user.save();
   res.send("User Added Successfully");
   }catch(err){
-    res.status(400).send("Error while saving user: ",err.message);
+    res.status(400).send("Error while saving user: "+err.message);
   }
   
 });
@@ -74,11 +74,12 @@ app.patch("/user", async (req, res) => {
     const userId = req.body.userId;
     const data = req.body;
     const user = await User.findByIdAndUpdate(userId,data,{
-      returnDocument: "after"
+      returnDocument: "after",
+      runValidators: true,
     });
     res.send(`user with id : ${userId} updated Succesffully` );
   }catch(err){
-    res.status(500).send("Something went wrong");
+    res.status(500).send("Something went wrong"+err.message);
   }
 })
 
