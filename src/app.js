@@ -2,10 +2,13 @@ const express = require("express");
 const app = express();
 const connectDB = require("./config/database");
 const User = require("./models/User");
-const {isSaveAllowed, validateSignupData} = require("./utils/validation");
-const bcrypt = require('bcrypt');
+const { isSaveAllowed, validateSignupData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
+app.use(cookieParser());
 /**
  * Api to register the user
  */
@@ -13,23 +16,22 @@ app.post("/signup", async (req, res) => {
   //console.log(req.body)
   //creating new instance of model(creating a document) User
 
-
   try {
     //validate all the fields of signup request should be present in the body
     isSaveAllowed(req);
 
     //validate the signup request data
     validateSignupData(req);
-    const {firstName, lastName, emailId, password} = req.body;
+    const { firstName, lastName, emailId, password } = req.body;
 
-    //encrypt the password 
+    //encrypt the password
 
-    const encyrptedPasword =await bcrypt.hash(password,10);
+    const encyrptedPasword = await bcrypt.hash(password, 10);
     const user = new User({
       firstName,
       lastName,
       emailId,
-      password: encyrptedPasword
+      password: encyrptedPasword,
     });
     await user.save();
     res.send("User Added Successfully");
@@ -42,23 +44,47 @@ app.post("/signup", async (req, res) => {
  * Login Api to allow user to login into the application.
  */
 
-app.post("/login", async (req, res) =>{
-  const {emailId , password} = req.body;
-  try{
-    const user = await User.findOne({emailId: emailId});
-    console.log(user)
-    if(!user){
+app.post("/login", async (req, res) => {
+  const { emailId, password } = req.body;
+  try {
+    const user = await User.findOne({ emailId: emailId });
+
+    if (!user) {
       throw new Error("Invalid Credentials");
     }
-    const isPasswordMatch =await bcrypt.compare(password, user.password);
-    if(!isPasswordMatch){
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
       throw new Error("Invalid Credentials");
+    } else {
+      //create a jwt token
+      const token = await jwt.sign({ _id: user._id }, "Mohit@Dev.com");
+      res.cookie("token", token);
+      res.send("Login Succesffully");
     }
-    res.send("Login Succesffully");
-  }catch(err){
+  } catch (err) {
     res.status(400).send(err.message);
   }
-})
+});
+
+app.get("/profile", async (req, res) => {
+  try {
+    const cookie = req.cookies;
+
+    const { token } = cookie;
+    if (!token) {
+      throw new Error("Invalid Token");
+    }
+    const payload = await jwt.verify(token, "Mohit@Dev.com");
+    const user = await User.find({ _id: payload._id });
+    if (!user) {
+      throw new Error("You are not authorized User");
+    }
+
+    res.send(user);
+  } catch (error) {
+    res.status(400).send(error.message);
+  }
+});
 
 /**
  * find user by emailId
@@ -108,12 +134,7 @@ app.delete("/user", async (req, res) => {
  */
 app.patch("/user/:userId", async (req, res) => {
   try {
-    const updateOptions = [
-      "age",
-      "photoUrl",
-      "description",
-      "skills",
-    ];
+    const updateOptions = ["age", "photoUrl", "description", "skills"];
 
     const isUpdateAllowed = Object.keys(req.body).every((key) =>
       updateOptions.includes(key)
