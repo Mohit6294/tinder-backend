@@ -1,39 +1,29 @@
- /**
-  * middleware for admin authentication
-  */
- const adminAuth = (req, res, next) => {
-  //Logic of checking if the request is authorized
-  const token = "xyz";
-  const isAdminAuthorized = token === "xyz";
-  console.log("Admin auth is logged");
-  
-  if(isAdminAuthorized){
-    next();
-  }
-  else{
-    res.status(401).send("User is not authorized");
-  }
-};
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 /**
  * Middleware for user authentication
  */
-const userAuth = (req, res, next) => {
-  //Logic of checking if the request is authorized
-  const token = "xyz";
-  const isAdminAuthorized = token === "xyz";
-  console.log("Admin auth is logged");
-  
-  if(isAdminAuthorized){
+const userAuth = async (req, res, next) => {
+  try {
+    //getting the token from the cookies
+    const { token } = req.cookies;
+    if (!token) {
+      throw new Error("Token is Invalid !!!");
+    }
+    const decodedObject = await jwt.verify(token, "Mohit@Dev.com");
+    const { _id } = decodedObject;
+    const user = await User.findById(_id);
+    if (!user) {
+      throw new Error("User is not Valid!!");
+    }
+    req.user = user;
     next();
-  }
-  else{
-    res.status(401).send("User is not authorized");
+  } catch (err) {
+    res.status(400).send("Error:" + err.message);
   }
 };
 
 module.exports = {
-  adminAuth,
   userAuth,
 };
-
