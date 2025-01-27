@@ -33,8 +33,34 @@ const isSaveAllowed = (req) => {
     throw new Error("Save not allowed , please check the field");
   }
 };
+const validateEditProfileData = (req) =>{
+  const allowedEditProfileData = [
+    "firstName",
+    "lastName",
+    "emailId",
+    "age",
+    "gender",
+    "photoUrl",
+    "description",
+    "skills"
+  ];
+
+  const isEditAllowed = Object.keys(req.body).every(key => allowedEditProfileData.includes(key));
+  return isEditAllowed;
+}
+
+const validateUpdatedPasswordData = (req) =>{
+  const isPasswordUpdateAllowed = true;
+  if(!Object.keys(req.body).includes("password")){
+    isPasswordUpdateAllowed = false;
+  }else if(!validator.isStrongPassword(req.body.password)){
+    throw new Error("Please enter the Strong password");
+  }
+  return isPasswordUpdateAllowed;
+}
 
 module.exports = {
   validateSignupData,
   isSaveAllowed,
+  validateEditProfileData
 }
