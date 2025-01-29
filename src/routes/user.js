@@ -1,6 +1,7 @@
 const express = require('express');
 const { userAuth } = require('../middleware/auth');
 const ConnectionRequest = require('../models/ConnectionRequest');
+const User = require('../models/User');
 const router = express.Router();
 
 router.get('/user/request/recieved',userAuth, async (req, res) =>{
@@ -54,6 +55,60 @@ router.get('/user/connections', userAuth, async (req, res) =>{
   }
 })
 
+router.get("/feed", userAuth, async (req, res) =>{
+  
+  try{
+    //find all connections
 
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    limit = limit > 50 ? 50 : limit;
+    const skip = (page - 1) * 10;
+    const loggedInUser = req.user;
+    const connectionRequests = await ConnectionRequest.find({
+      $or:[
+        {
+          fromUserId: loggedInUser._id,
+        },
+        {
+          toUserId: loggedInUser._id,
+        }
+      ]
+    });
+
+    const requestIds = new Set();
+    connectionRequests.forEach(key=> {
+      requestIds.add(key.fromUserId.toString());
+      requestIds.add(key.toUserId.toString());
+    });
+    console.log(requestIds);
+    
+    const user = await User.find({
+      $and :[
+        {
+          _id: {
+            $nin: Array.from(requestIds)
+          }
+        },
+        {
+          _id:{
+            $ne: loggedInUser._id
+          }
+        }
+      ]
+    })
+    .select(["firstName","lastName","age","description","photoUrl"])
+    .skip(skip)
+    .limit(limit);
+
+    res.json({
+      user
+    })
+  }catch(error){
+    res.status(400).json({
+      message: `Error ${error.message}`
+    })
+  }
+});
 
 module.exports = router;
