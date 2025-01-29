@@ -67,6 +67,15 @@ const userSchema =new mongoose.Schema({
         throw new Error("Skills should be less than 10");
       }
     }
+  },
+  roles:{
+    type: [String],
+    enum: {
+        values: ["USER","ADMIN"],
+         message: '{VALUE} is not supported'
+    },
+    default: "USER"
+
   }
   
 },{

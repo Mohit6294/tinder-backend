@@ -18,7 +18,7 @@ router.post("/signup", async (req, res) => {
 
     //validate the signup request data
     validateSignupData(req);
-    const { firstName, lastName, emailId, password } = req.body;
+    const { firstName, lastName, emailId, password,roles } = req.body;
 
     //encrypt the password
 
@@ -28,6 +28,7 @@ router.post("/signup", async (req, res) => {
       lastName,
       emailId,
       password: encyrptedPasword,
+      roles: roles
     });
     await user.save();
     res.send("User Added Successfully");

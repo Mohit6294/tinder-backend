@@ -24,6 +24,23 @@ const userAuth = async (req, res, next) => {
   }
 };
 
+
+const verifyAdminRole = async (req, res,next) =>{
+  try{
+    const user = req.user;
+    if(user.roles.includes('ADMIN')){
+      next();
+    }else{
+      throw new Error('Not a valid user');
+    }
+  }catch(error){
+    res.status(403).json({
+      message: `you don't have required permission`
+    })
+  }
+}
+
 module.exports = {
   userAuth,
+  verifyAdminRole
 };

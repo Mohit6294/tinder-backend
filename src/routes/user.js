@@ -1,8 +1,9 @@
 const express = require('express');
-const { userAuth } = require('../middleware/auth');
+const { userAuth,verifyAdminRole } = require('../middleware/auth');
 const ConnectionRequest = require('../models/ConnectionRequest');
 const User = require('../models/User');
 const router = express.Router();
+const mongoose = require("mongoose");
 
 router.get('/user/request/recieved',userAuth, async (req, res) =>{
   try{
@@ -107,6 +108,63 @@ router.get("/feed", userAuth, async (req, res) =>{
   }catch(error){
     res.status(400).json({
       message: `Error ${error.message}`
+    })
+  }
+});
+
+router.delete("/user/:userId", userAuth, verifyAdminRole, async (req,res) =>{
+  const session = await mongoose.startSession(); // Start a session
+  session.startTransaction(); // Begin a transaction
+  try{
+    const userId = req.params.userId;
+    if(!userId){
+      return res.status(400).json({
+        message: `Please Enter valid ${userId}`
+      });
+    }
+
+    
+    //Before deleting User  we need to remove this user from all connections
+    const findConnectionsIds = await ConnectionRequest.find({
+      $or:[
+        {
+          fromUserId: userId
+        },
+        {
+          toUserId: userId
+        }
+      ]
+    }).select("_id");
+
+
+
+    const connectionIdsSet = new Set();
+
+
+    findConnectionsIds.forEach(key =>{
+      connectionIdsSet.add(key);
+    });
+
+    connectionIdsSet.forEach(async (data)=>{
+      await ConnectionRequest.deleteOne({
+        _id: data
+      })
+    })
+    const user = await User.findByIdAndDelete({ _id: userId });
+
+    // Commit transaction (finalize changes)
+    await session.commitTransaction();
+    session.endSession();
+
+    res.json({
+      message: `${user} deleted Successfully`,
+    })
+
+  }catch(error){
+    await session.abortTransaction(); // Rollback changes if any error occurs
+    session.endSession();
+    res.status(400).json({
+      message: `Error occurred during deleting :: ${error.message}`
     })
   }
 });

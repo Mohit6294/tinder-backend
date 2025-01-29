@@ -24,6 +24,7 @@ const isSaveAllowed = (req) => {
     "photoUrl",
     "description",
     "skills",
+    "roles"
   ];
 
   const isSaveAllowed = Object.keys(req.body).every((key) =>
