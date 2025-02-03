@@ -6,8 +6,8 @@ const jwt = require("jsonwebtoken");
 const cors = require('cors')
 
 app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true
+  origin: 'http://localhost:5173',  // Your frontend URL
+  credentials: true                // ✅ Allow credentials
 }));
 
 app.use(express.json());
