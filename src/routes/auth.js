@@ -58,7 +58,7 @@ router.post("/login", async (req, res) => {
       res.cookie("token", token,{
         expires: new Date(Date.now() + 6 * 60 * 60 * 1000 ) // 6 hour validity
       });
-      res.send("Login Succesffully");
+      res.json(user);
     }
   } catch (err) {
     res.status(400).send(err.message);
