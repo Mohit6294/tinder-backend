@@ -30,8 +30,12 @@ router.post("/signup", async (req, res) => {
       password: encyrptedPasword,
       roles: roles
     });
-    await user.save();
-    res.send("User Added Successfully");
+    const savedUser = await user.save();
+    const token = await savedUser.getJWT();
+      res.cookie("token", token,{
+        expires: new Date(Date.now() + 6 * 60 * 60 * 1000 ) // 6 hour validity
+      });
+    res.json({message:"User Added Successfully",data: savedUser});
   } catch (err) {
     res.status(400).send("Error while saving user: " + err.message);
   }
