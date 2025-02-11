@@ -4,6 +4,7 @@ const connectDB = require("./config/database");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const cors = require('cors')
+const logger = require("./config/logger");
 require('dotenv').config()
 
 app.use(cors({
@@ -33,12 +34,13 @@ app.use("/", userRouter);
  */
 connectDB()
   .then(() => {
-    console.log("Database connection established...");
+    logger.info(`Database Connection Established Succesfully`);
     app.listen(process.env.PORT, () => {
-      console.log("listnening the port on 5000");
+      logger.info(`listening request from the port ${process.env.PORT}`)
     });
   })
   .catch((err) => {
+    logger.error(`Error occurred during connecting Database ${err}`)
     console.error("Database cannot be connected");
   });
 

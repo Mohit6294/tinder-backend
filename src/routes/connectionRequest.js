@@ -3,6 +3,7 @@ const { userAuth } = require("../middleware/auth");
 const User = require("../models/User");
 const ConnectionRequest = require("../models/ConnectionRequest");
 const sendEmail = require("../utils/sendEmail");
+const logger = require('../config/logger');
 
 const router = express.Router();
 
@@ -39,6 +40,7 @@ router.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
     console.log(isExistingConnectionRequestExist);
 
     if (isExistingConnectionRequestExist.length > 0) {
+      logger.error(`Connection is already exist between ${fromUserId} and ${toUserId}`);
       throw new Error(
         `Connection is already exist between ${fromUserId} and ${toUserId}`
       );
@@ -54,12 +56,13 @@ router.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
 
     
     const re = await sendEmail.run();
-    console.log(re);
+    logger.debug(`Email sent successfully ${re}`);
     res.send({
       message: `${req.user.firstName} mark ${status} ${user.firstName} profile`,
       data: request,
     });
   } catch (error) {
+    logger.error(`Error sending connection request ${error.message}`);
     res.status(400).send("Error Sending Connection Request ." + error.message);
   }
 });
@@ -74,6 +77,7 @@ router.post("/request/review/:status/:requestId",
       const allowedStatus = ["accepted", "rejected"];
       const { status, requestId } = req.params;
       if (!allowedStatus.includes(status)) {
+        logger.error(`Status is not allowed`);
         return res.status(400).json({
           message: `Status is not Allowed`,
         });
@@ -87,7 +91,6 @@ router.post("/request/review/:status/:requestId",
         toUserId: loggedInUser._id,
         status: "interested",
       });
-      console.log(connectionRequest);
       
       if (!connectionRequest) {
         return res.status(400).json({
@@ -96,11 +99,13 @@ router.post("/request/review/:status/:requestId",
       }
       connectionRequest.status = status;
       const data = await connectionRequest.save();
+      logger.info(`Status changed Successfully for requestId ${requestId}`);
       res.json({
         message:`status changed succesffully for requestId ${requestId}`,
         data
       })
     } catch (error) {
+      logger.error(`Error : ${error.message}`);
       res.status(400).send("Error :" + error.message);
     }
   }

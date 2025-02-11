@@ -2,6 +2,7 @@ const express = require('express');
 const { isSaveAllowed, validateSignupData } = require("../utils/validation");
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+const logger = require("../config/logger");
 
 const router = express.Router();
 
@@ -9,8 +10,7 @@ const router = express.Router();
  * Api to register the user
  */
 router.post("/signup", async (req, res) => {
-  //console.log(req.body)
-  //creating new instance of model(creating a document) User
+
 
   try {
     //validate all the fields of signup request should be present in the body
@@ -35,8 +35,10 @@ router.post("/signup", async (req, res) => {
       res.cookie("token", token,{
         expires: new Date(Date.now() + 6 * 60 * 60 * 1000 ) // 6 hour validity
       });
+      logger.info(`User saved succesfully`);
     res.json({message:"User Added Successfully",data: savedUser});
   } catch (err) {
+    logger.error(`Error while saving user: ${err.message}`);
     res.status(400).send("Error while saving user: " + err.message);
   }
 });
@@ -62,9 +64,11 @@ router.post("/login", async (req, res) => {
       res.cookie("token", token,{
         expires: new Date(Date.now() + 6 * 60 * 60 * 1000 ) // 6 hour validity
       });
+      logger.info(`${user.firstName} Logged in succesffully`)
       res.json(user);
     }
   } catch (err) {
+    logger.error(`Error occurred while login ${err.message}`);
     res.status(400).send(err.message);
   }
 });
@@ -76,6 +80,7 @@ router.post("/logout", async (req, res) =>{
   res.cookie('token', null, {
     expires: new Date(Date.now())
   });
+  logger.debug(`User logged out successfully`);
   res.send(`Logged out Successfully`);
 });
 
