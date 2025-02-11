@@ -2,6 +2,7 @@ const express = require("express");
 const { userAuth } = require("../middleware/auth");
 const User = require("../models/User");
 const ConnectionRequest = require("../models/ConnectionRequest");
+const sendEmail = require("../utils/sendEmail");
 
 const router = express.Router();
 
@@ -51,6 +52,9 @@ router.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
 
     const request = await connectionRequest.save();
 
+    
+    const re = await sendEmail.run();
+    console.log(re);
     res.send({
       message: `${req.user.firstName} mark ${status} ${user.firstName} profile`,
       data: request,

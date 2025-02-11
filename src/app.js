@@ -4,6 +4,7 @@ const connectDB = require("./config/database");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const cors = require('cors')
+require('dotenv').config()
 
 app.use(cors({
   origin: 'http://localhost:5173',  // Your frontend URL
@@ -33,7 +34,7 @@ app.use("/", userRouter);
 connectDB()
   .then(() => {
     console.log("Database connection established...");
-    app.listen(5000, () => {
+    app.listen(process.env.PORT, () => {
       console.log("listnening the port on 5000");
     });
   })
